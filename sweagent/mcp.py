@@ -7,8 +7,8 @@ from pathlib import Path
 
 from agents.mcp.server import MCPServerStdio, MCPServerStdioParams
 
-from .config import MCPConfig
-from .logging import logger, write_json_log
+from sweagent.config import MCPConfig
+from sweagent.logging import logger, write_json_log
 
 
 @dataclass

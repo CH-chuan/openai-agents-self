@@ -8,9 +8,9 @@ from typing import Any
 
 from agents.run import DEFAULT_AGENT_RUNNER
 
-from .config import AgentConfigLoader
-from .logging import configure_logging, logger
-from .runtime import SWEAgentRuntime
+from sweagent.config import AgentConfigLoader
+from sweagent.logging import configure_logging, logger
+from sweagent.runtime import SWEAgentRuntime
 
 
 @dataclass

@@ -10,8 +10,8 @@ from typing import Iterable, Sequence
 
 from agents.tool import LocalShellCommandRequest
 
-from .config import CommandConfig, SecurityConfig
-from .logging import logger, write_json_log
+from sweagent.config import CommandConfig, SecurityConfig
+from sweagent.logging import logger, write_json_log
 
 
 class CommandExecutionError(RuntimeError):

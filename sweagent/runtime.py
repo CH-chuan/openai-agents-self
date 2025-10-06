@@ -12,10 +12,10 @@ from agents.models.openai_responses import OpenAIResponsesModel
 from agents.tool import LocalShellTool
 from openai import AsyncOpenAI
 
-from .commands import ApptainerCommandExecutor
-from .config import SWEAgentConfig
-from .logging import configure_logging, logger
-from .mcp import MCPServerFactory
+from sweagent.commands import ApptainerCommandExecutor
+from sweagent.config import SWEAgentConfig
+from sweagent.logging import configure_logging, logger
+from sweagent.mcp import MCPServerFactory
 
 
 @dataclass
@@ -26,13 +26,20 @@ class SWEAgentRuntime:
 
     def build_agent(self) -> Agent[Any]:
         configure_logging()
-        executor = ApptainerCommandExecutor(
-            security=self.config.security,
-            command_config=self.config.commands,
-        )
-        shell_tool = LocalShellTool(executor=executor)
+        
+        tools = []
+        if self.config.commands is not None:
+            executor = ApptainerCommandExecutor(
+                security=self.config.security,
+                command_config=self.config.commands,
+            )
+            shell_tool = LocalShellTool(executor=executor)
+            tools.append(shell_tool)
 
-        mcp_server = MCPServerFactory(self.config.mcp).create()
+        mcp_servers = []
+        if self.config.mcp is not None:
+            mcp_server = MCPServerFactory(self.config.mcp).create()
+            mcp_servers.append(mcp_server)
 
         openai_client = AsyncOpenAI(
             api_key=self.config.model.api_key,
@@ -52,8 +59,8 @@ class SWEAgentRuntime:
         ](  # Generic context; SWE-bench harness will supply details via RunConfig
             name="swe-agent",
             instructions=instructions,
-            tools=[shell_tool],
-            mcp_servers=[mcp_server],
+            tools=tools,
+            mcp_servers=mcp_servers,
             model=model,
             model_settings=self._build_model_settings(),
         )

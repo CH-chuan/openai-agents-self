@@ -3,9 +3,9 @@
 
 agent:
   model:
-    name: azure/gpt-4o
-    api_key: ${AZURE_API_KEY}
-    api_base: ${AZURE_API_BASE}
+    name: openai/gpt-oss-20b
+    api_key: ${VLLM_API_KEY}
+    api_base: ${VLLM_API_BASE}
     temperature: 0.6
 
   security:
@@ -16,23 +16,24 @@ agent:
       - sudo
 
   limits:
-    max_tokens: 50000
-    max_steps: 30
+    max_tokens: 131,072
+    max_steps: 3
 
   templates:
     system_template: |-
       You are an autonomous programmer working in a Singularity container.
       Execute bash commands and submit solutions when done.
+      Now I only want you to list the files in the current directory using command ls.
 
-  mcp:
-    path: /opt/mcp/filesystem/server
-    tool_allowlist:
-      - read_file
-      - write_file
-      - list_directory
-    env:
-      MCP_LOG_LEVEL: info
-    use_structured_content: false
+  # mcp:
+  #   path: /opt/mcp/filesystem/server
+  #   tool_allowlist:
+  #     - read_file
+  #     - write_file
+  #     - list_directory
+  #   env:
+  #     MCP_LOG_LEVEL: info
+  #   use_structured_content: false
 
   commands:
     apptainer_image: ./swebench_instances/images/swebench_sweb.eval.x86_64.astropy_1776_astropy-12907.sif
@@ -40,6 +41,4 @@ agent:
     bind_mounts:
       - /host/data:/workspace/data
       - /host/cache:/workspace/.cache
-    env:
-      SWE_BENCH_DATASET: /workspace/data/swe-bench
 

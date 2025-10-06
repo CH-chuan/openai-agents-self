@@ -75,8 +75,8 @@ class SWEAgentConfig:
     security: SecurityConfig
     limits: LimitsConfig
     templates: TemplatesConfig
-    mcp: MCPConfig
-    commands: CommandConfig
+    mcp: MCPConfig | None
+    commands: CommandConfig | None
 
 
 def _as_dict(node: Any, *, context: str) -> MutableMapping[str, Any]:
@@ -136,6 +136,12 @@ def parse_limits(config: Mapping[str, Any]) -> LimitsConfig:
             return None
         if isinstance(value, int):
             return value
+        if isinstance(value, str):
+            normalized = value.strip().replace(",", "").replace("_", "")
+            try:
+                return int(normalized)
+            except ValueError as exc:
+                raise ConfigError(f"Field '{field_name}' must be an integer") from exc
         raise ConfigError(f"Field '{field_name}' must be an integer")
 
     return LimitsConfig(
@@ -219,16 +225,16 @@ class AgentConfigLoader:
         security_section = _load_section(agent_section, "security", required=False)
         limits_section = _load_section(agent_section, "limits", required=False)
         templates_section = _load_section(agent_section, "templates", required=False)
-        mcp_section = _load_section(agent_section, "mcp")
-        commands_section = _load_section(agent_section, "commands")
+        mcp_section = _load_section(agent_section, "mcp", required=False)
+        commands_section = _load_section(agent_section, "commands", required=False)
 
         return SWEAgentConfig(
             model=parse_model(model_section),
             security=parse_security(security_section),
             limits=parse_limits(limits_section),
             templates=parse_templates(templates_section),
-            mcp=parse_mcp(mcp_section),
-            commands=parse_commands(commands_section),
+            mcp=parse_mcp(mcp_section) if mcp_section else None,
+            commands=parse_commands(commands_section) if commands_section else None,
         )
 
     def _read_yaml(self) -> Mapping[str, Any]:
