@@ -25,15 +25,15 @@ agent:
       Execute bash commands and submit solutions when done.
       Now I only want you to list the files in the current directory using command ls.
 
-  # mcp:
-  #   path: /opt/mcp/filesystem/server
-  #   tool_allowlist:
-  #     - read_file
-  #     - write_file
-  #     - list_directory
-  #   env:
-  #     MCP_LOG_LEVEL: info
-  #   use_structured_content: false
+  mcp:
+    path: /home/cche/projects/openai-agents-self/mcp-servers/filesystem/node_modules/.bin/mcp-server-filesystem
+    tool_allowlist:
+      - read_file
+      - write_file
+      - list_directory
+    env:
+      MCP_LOG_LEVEL: info
+    use_structured_content: false
 
   commands:
     apptainer_image: ./swebench_instances/images/swebench_sweb.eval.x86_64.astropy_1776_astropy-12907.sif

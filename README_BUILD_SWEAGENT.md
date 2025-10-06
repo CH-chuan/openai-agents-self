@@ -25,4 +25,54 @@ pytest sweagent/test/test_commands.py
 pytest sweagent/test/test_agent.py
 ```
 
+4. finishing above, we can now test on MCP servers, we choose to use official filesystem mcp server
 
+a. install node.js if you do not have
+
+```bash
+# Download and run the setup script for Node.js 20.x (LTS)
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+
+# Install Node.js (includes npm and npx)
+sudo apt-get install -y nodejs
+
+# Verify installation
+node --version    # Should show v20.x.x
+npm --version     # Should show 10.x.x
+npx --version     # Should show 10.x.x
+```
+
+and test
+```bash
+# Create a test directory
+cd /tmp
+mkdir node-test && cd node-test
+
+# Initialize a package.json
+npm init -y
+
+# Install a package
+npm install lodash
+
+# Use npx
+npx cowsay "Node.js is installed!"
+```
+
+b. install filesystem mcp server locally
+```bash
+cd ~/projects/openai-agents-self
+
+# Create a directory for MCP servers
+mkdir -p mcp-servers
+cd mcp-servers
+
+# Clone from GitHub (more control)
+git clone https://github.com/modelcontextprotocol/servers.git mcp-filesystem
+cd mcp-filesystem/src/filesystem
+
+# Install dependencies locally
+npm install
+
+# Build the server
+npm run build
+```

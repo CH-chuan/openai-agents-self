@@ -2,6 +2,11 @@
 .specstory
 *.sif
 
+# MCP Server dependencies
+mcp-servers/*/node_modules/
+mcp-servers/*/package-lock.json
+
+
 # macOS Files
 .DS_Store
 
