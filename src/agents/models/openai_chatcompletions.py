@@ -95,7 +95,20 @@ class OpenAIChatCompletionsModel(Model):
                 else:
                     finish_reason = first_choice.finish_reason if first_choice else "-"
                     logger.debug(f"LLM resp had no message. finish_reason: {finish_reason}")
-
+            # Print raw VLLM response for debugging
+            print("=== VLLM RAW RESPONSE DEBUG ===")
+            print(f"Raw response: {response}")
+            if message is not None:
+                print(f"VLLM Content: {message.content}")
+                print(f"VLLM Tool Calls: {message.tool_calls}")
+                print(f"VLLM Finish Reason: {first_choice.finish_reason if first_choice else 'None'}")
+                if hasattr(message, "reasoning_content") and message.reasoning_content:
+                    print(f"VLLM Reasoning Content: {message.reasoning_content}")
+            else:
+                finish_reason = first_choice.finish_reason if first_choice else "-"
+                print(f"VLLM No message. finish_reason: {finish_reason}")
+            print("=== END VLLM RAW RESPONSE DEBUG ===")
+            
             usage = (
                 Usage(
                     requests=1,
@@ -260,6 +273,15 @@ class OpenAIChatCompletionsModel(Model):
 
         converted_tools = _to_dump_compatible(converted_tools)
 
+        # Print raw input for debugging
+        print("=== VLLM RAW INPUT DEBUG ===")
+        print(f"Model: {self.model}")
+        print(f"Messages: {json.dumps(converted_messages, indent=2, ensure_ascii=False)}")
+        print(f"Tools: {json.dumps(converted_tools, indent=2, ensure_ascii=False)}")
+        print(f"Tool choice: {tool_choice}")
+        print(f"Response format: {response_format}")
+        print("=== END VLLM RAW INPUT DEBUG ===")
+        
         if _debug.DONT_LOG_MODEL_DATA:
             logger.debug("Calling LLM")
         else:

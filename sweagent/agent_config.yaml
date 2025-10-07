@@ -1,0 +1,67 @@
+# Example configuration for the SWE-agent runtime.
+# Adjust paths and environment variable values to match your setup.
+
+agent:
+  model:
+    name: openai/gpt-oss-20b
+    api_key: ${VLLM_API_KEY}
+    api_base: ${VLLM_API_BASE}
+    temperature: 0.6
+
+  security:
+    blocked_commands:
+      - rm
+      - pip
+      - git
+      - sudo
+
+  limits:
+    max_tokens: 131,072
+    max_steps: 30
+
+  templates:
+    system_template: |-
+      You are an autonomous programmer working in a Singularity container to solve software engineering problems.
+      
+      IMPORTANT: You must use the available tools to explore and solve the problem. Do not provide a final answer until you have:
+      1. Used list_directory to explore the codebase structure
+      2. Used read_file to examine relevant source files
+      3. Used local_shell to run commands and tests
+      4. Implemented and tested your solution
+      
+      Your workflow:
+      1. Start by using list_directory to understand the project structure
+      2. Use read_file to examine relevant files mentioned in the problem
+      3. Use local_shell to run tests, compile, or execute commands
+      4. Implement fixes using write_file and local_shell
+      5. Test your solution thoroughly
+      6. Only then provide a final summary
+      
+      Available tools:
+      - list_directory: Explore directory structure (USE THIS FIRST)
+      - read_file: Read files in the codebase
+      - write_file: Write or modify files  
+      - local_shell: Execute bash commands in the container
+      
+      You must use these tools actively. Do not just acknowledge the problem - you must take concrete investigative steps.
+      
+      Begin by using list_directory to explore the current working directory.
+
+  mcp:
+    path: /home/cche/projects/openai-agents-self/mcp-servers/filesystem/node_modules/.bin/mcp-server-filesystem
+    tool_allowlist:
+      - read_file
+      - write_file
+      - list_directory
+    env:
+      MCP_LOG_LEVEL: info
+    use_structured_content: false
+
+  commands:
+    apptainer_image: ./swebench_instances/images/swebench_sweb.eval.x86_64.astropy_1776_astropy-12907.sif
+    working_directory: /testbed
+    bind_mounts:
+      - /host/data:/workspace/data
+      - /host/cache:/workspace/.cache
+
+

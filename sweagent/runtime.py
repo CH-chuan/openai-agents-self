@@ -13,8 +13,8 @@ from openai import AsyncOpenAI
 
 from sweagent.commands import ApptainerCommandExecutor
 from sweagent.config import SWEAgentConfig
-from sweagent.logging import configure_logging, logger
-from sweagent.mcp import MCPServerFactory
+from sweagent.sweagent_logging import configure_logging, logger
+from sweagent.sweagent_mcp import MCPServerFactory
 
 
 @dataclass
@@ -23,7 +23,7 @@ class SWEAgentRuntime:
 
     config: SWEAgentConfig
 
-    def build_agent(self) -> Agent[Any]:
+    async def build_agent(self) -> Agent[Any]:
         configure_logging()
         
         tools = []
@@ -39,6 +39,8 @@ class SWEAgentRuntime:
         mcp_servers = []
         if self.config.mcp is not None:
             mcp_server = MCPServerFactory(self.config.mcp).create()
+            # Connect the MCP server before adding it to the agent
+            await mcp_server.connect()
             mcp_servers.append(mcp_server)
 
         openai_client = AsyncOpenAI(
@@ -67,6 +69,8 @@ class SWEAgentRuntime:
             mcp_servers=mcp_servers,
             model=model,
             model_settings=self._build_model_settings(),
+            output_type=None,  # Don't treat any response as final output
+            tool_use_behavior="run_llm_again",  # Explicitly set to continue after tool use
         )
 
         logger.info(

@@ -1,6 +1,8 @@
 # my own
 .specstory
 *.sif
+logs/
+results/
 
 # MCP Server dependencies
 mcp-servers/*/node_modules/

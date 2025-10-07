@@ -1,0 +1,7 @@
+instances:
+  type: swe_bench
+  subset: verified        # verified | lite | full
+  split: test             # test | dev
+  filter: ^(matplotlib__matplotlib-24149|sympy__sympy-17630)$
+  slice: ":1"            # Python slice notation
+  shuffle: false

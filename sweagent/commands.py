@@ -12,7 +12,7 @@ from typing import Any, Iterable, Sequence
 from agents.tool import FunctionTool, LocalShellCommandRequest, ToolContext
 
 from sweagent.config import CommandConfig, SecurityConfig
-from sweagent.logging import logger, write_json_log
+from sweagent.sweagent_logging import logger, write_json_log
 
 
 class CommandExecutionError(RuntimeError):
@@ -129,7 +129,7 @@ class ApptainerCommandExecutor:
             # Create a LocalShellCommandRequest-like object
             from types import SimpleNamespace
             request = LocalShellCommandRequest(
-                ctx_wrapper=ctx.run_context,
+                ctx_wrapper=ctx,
                 data=SimpleNamespace(command=command),
             )
             return await self(request)

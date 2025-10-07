@@ -93,6 +93,89 @@ class Converter:
     def message_to_output_items(cls, message: ChatCompletionMessage) -> list[TResponseOutputItem]:
         items: list[TResponseOutputItem] = []
 
+        # VLLM-specific tool call detection and conversion
+        if message.content and message.tool_calls == []:
+            # Check if content looks like tool parameters (JSON with common tool parameter keys)
+            try:
+                import json
+                content_json = json.loads(message.content)
+                if isinstance(content_json, dict):
+                    # Check for common tool parameter patterns
+                    tool_name = None
+                    tool_args = content_json
+                    
+                    # Detect tool name based on parameter keys
+                    if "path" in content_json and len(content_json) == 1:
+                        tool_name = "list_directory"
+                    elif "path" in content_json and ("content" in content_json or "text" in content_json):
+                        tool_name = "write_file"
+                    elif "path" in content_json and ("head" in content_json or "tail" in content_json):
+                        tool_name = "read_file"
+                    elif "command" in content_json:
+                        tool_name = "local_shell"
+                    
+                    if tool_name:
+                        # Create a fake tool call ID
+                        fake_tool_call_id = f"call_vllm_{hash(str(content_json))}"
+                        
+                        # Create a ResponseFunctionToolCall
+                        items.append(
+                            ResponseFunctionToolCall(
+                                id=FAKE_RESPONSES_ID,
+                                call_id=fake_tool_call_id,
+                                arguments=json.dumps(tool_args),
+                                name=tool_name,
+                                type="function_call",
+                            )
+                        )
+                        
+                        # Don't add the content as a message since it's tool parameters
+                        return items
+            except (json.JSONDecodeError, TypeError):
+                pass  # Not JSON, continue with normal processing
+        
+        # Special handling for openai/gpt-oss-20b model - check reasoning_content
+        if (hasattr(message, "reasoning_content") and message.reasoning_content and 
+            message.tool_calls == [] and message.content):
+            try:
+                import json
+                # Try to parse reasoning_content for tool parameters
+                reasoning_json = json.loads(message.reasoning_content)
+                if isinstance(reasoning_json, dict):
+                    # Check for common tool parameter patterns in reasoning_content
+                    tool_name = None
+                    tool_args = reasoning_json
+                    
+                    # Detect tool name based on parameter keys
+                    if "path" in reasoning_json and len(reasoning_json) == 1:
+                        tool_name = "list_directory"
+                    elif "path" in reasoning_json and ("content" in reasoning_json or "text" in reasoning_json):
+                        tool_name = "write_file"
+                    elif "path" in reasoning_json and ("head" in reasoning_json or "tail" in reasoning_json):
+                        tool_name = "read_file"
+                    elif "command" in reasoning_json:
+                        tool_name = "local_shell"
+                    
+                    if tool_name:
+                        # Create a fake tool call ID
+                        fake_tool_call_id = f"call_vllm_reasoning_{hash(str(reasoning_json))}"
+                        
+                        # Create a ResponseFunctionToolCall
+                        items.append(
+                            ResponseFunctionToolCall(
+                                id=FAKE_RESPONSES_ID,
+                                call_id=fake_tool_call_id,
+                                arguments=json.dumps(tool_args),
+                                name=tool_name,
+                                type="function_call",
+                            )
+                        )
+                        
+                        # Don't add the content as a message since it's tool parameters
+                        return items
+            except (json.JSONDecodeError, TypeError):
+                pass  # Not JSON, continue with normal processing
+
         # Check if message is agents.extentions.models.litellm_model.InternalChatCompletionMessage
         # We can't actually import it here because litellm is an optional dependency
         # So we use hasattr to check for reasoning_content and thinking_blocks

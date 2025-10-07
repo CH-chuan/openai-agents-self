@@ -2,7 +2,7 @@
 ```bash
 python -m venv venv
 source venv/bin/activate
-pip install -e .
+pip install -r requirements.txt
 ```
 
 2. install apptainer image for testing purpose
@@ -69,7 +69,6 @@ cd mcp-servers/filesystem
 # Initialize and install the filesystem server
 npm init -y
 npm install @modelcontextprotocol/server-filesystem
-
-# Verify installation
-npx @modelcontextprotocol/server-filesystem --help
 ```
+
+5. 

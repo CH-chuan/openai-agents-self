@@ -2,12 +2,13 @@ import subprocess
 import os
 from pathlib import Path
 
-def pull_and_build_sif():
+def pull_and_build_sif(instance_id="astropy__astropy-12907"):
     """
     Pull Docker image and convert to Apptainer .sif file
     """
     # Define the Docker image name
-    docker_image = "swebench/sweb.eval.x86_64.astropy_1776_astropy-12907"
+    instance_id = instance_id.replace("__", "_1776_")
+    docker_image = f"swebench/sweb.eval.x86_64.{instance_id}"
     
     # Create images directory if it doesn't exist
     images_dir = Path("swebench_instances/images")
@@ -15,7 +16,7 @@ def pull_and_build_sif():
     
     # Define output .sif file path
     # Convert image name to valid filename (replace / with _)
-    sif_filename = docker_image.replace("/", "_").replace(":", "_") + ".sif"
+    sif_filename = instance_id + ".sif"
     sif_path = images_dir / sif_filename
     
     print(f"Docker image: {docker_image}")

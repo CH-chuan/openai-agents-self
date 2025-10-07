@@ -1,0 +1,47 @@
+agent:
+  commands:
+    apptainer_image: swebench_instances/images/matplotlib_1776_matplotlib-24149.sif
+    bind_mounts:
+    - /host/data:/workspace/data
+    - /host/cache:/workspace/.cache
+    working_directory: /testbed
+  limits:
+    max_steps: 30
+    max_tokens: 131,072
+  mcp:
+    env:
+      MCP_LOG_LEVEL: info
+    path: /home/cche/projects/openai-agents-self/mcp-servers/filesystem/node_modules/.bin/mcp-server-filesystem
+    tool_allowlist:
+    - read_file
+    - write_file
+    - list_directory
+    use_structured_content: false
+  model:
+    api_base: http://0.0.0.0:8000/v1
+    api_key: none-api-key
+    name: openai/gpt-oss-20b
+    temperature: 0.6
+  security:
+    blocked_commands:
+    - rm
+    - pip
+    - git
+    - sudo
+  templates:
+    system_template: "You are an autonomous programmer working in a Singularity container\
+      \ to solve software engineering problems.\n\nIMPORTANT: You must use the available\
+      \ tools to explore and solve the problem. Do not provide a final answer until\
+      \ you have:\n1. Used list_directory to explore the codebase structure\n2. Used\
+      \ read_file to examine relevant source files\n3. Used local_shell to run commands\
+      \ and tests\n4. Implemented and tested your solution\n\nYour workflow:\n1. Start\
+      \ by using list_directory to understand the project structure\n2. Use read_file\
+      \ to examine relevant files mentioned in the problem\n3. Use local_shell to\
+      \ run tests, compile, or execute commands\n4. Implement fixes using write_file\
+      \ and local_shell\n5. Test your solution thoroughly\n6. Only then provide a\
+      \ final summary\n\nAvailable tools:\n- list_directory: Explore directory structure\
+      \ (USE THIS FIRST)\n- read_file: Read files in the codebase\n- write_file: Write\
+      \ or modify files  \n- local_shell: Execute bash commands in the container\n\
+      \nYou must use these tools actively. Do not just acknowledge the problem - you\
+      \ must take concrete investigative steps.\n\nBegin by using list_directory to\
+      \ explore the current working directory."

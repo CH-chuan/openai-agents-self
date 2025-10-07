@@ -8,7 +8,7 @@ from pathlib import Path
 from agents.mcp.server import MCPServerStdio, MCPServerStdioParams
 
 from sweagent.config import MCPConfig
-from sweagent.logging import logger, write_json_log
+from sweagent.sweagent_logging import logger, write_json_log
 
 
 @dataclass
@@ -20,6 +20,7 @@ class MCPServerFactory:
     def create(self) -> MCPServerStdio:
         params: MCPServerStdioParams = {
             "command": str(self.config.path),
+            "args": ["."],  # Allow access to the current directory
             "env": self.config.env,
         }
         server = MCPServerStdio(
