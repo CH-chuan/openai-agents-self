@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Mapping, MutableMapping
@@ -247,5 +249,19 @@ class AgentConfigLoader:
             raise ConfigError(f"Failed to parse YAML: {exc}") from exc
         if not isinstance(content, Mapping):
             raise ConfigError("Top-level YAML structure must be a mapping")
-        return content
+        return self._expand_env_vars(content)
+    
+    def _expand_env_vars(self, data: Any) -> Any:
+        """Recursively expand environment variables in ${VAR} format."""
+        if isinstance(data, str):
+            # Replace ${VAR} with environment variable value
+            def replace_env(match):
+                var_name = match.group(1)
+                return os.getenv(var_name, match.group(0))
+            return re.sub(r'\$\{([^}]+)\}', replace_env, data)
+        elif isinstance(data, dict):
+            return {key: self._expand_env_vars(value) for key, value in data.items()}
+        elif isinstance(data, list):
+            return [self._expand_env_vars(item) for item in data]
+        return data
 

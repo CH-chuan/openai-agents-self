@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import shlex
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Sequence
+from typing import Any, Iterable, Sequence
 
-from agents.tool import LocalShellCommandRequest
+from agents.tool import FunctionTool, LocalShellCommandRequest, ToolContext
 
 from sweagent.config import CommandConfig, SecurityConfig
 from sweagent.logging import logger, write_json_log
@@ -109,4 +110,52 @@ class ApptainerCommandExecutor:
         for mount in bind_mounts:
             yield "--bind"
             yield mount
+    
+    def to_function_tool(self) -> FunctionTool:
+        """Convert this executor to a FunctionTool for ChatCompletions API.
+        
+        This allows LocalShellTool-like functionality to work with models
+        that only support the ChatCompletions API (like VLLM).
+        """
+        async def shell_function(ctx: ToolContext[Any], command: str) -> str:
+            """Execute a shell command in the Apptainer container.
+            
+            Args:
+                command: The shell command to execute
+                
+            Returns:
+                The command output (stdout), or stdout + stderr if stderr is non-empty
+            """
+            # Create a LocalShellCommandRequest-like object
+            from types import SimpleNamespace
+            request = LocalShellCommandRequest(
+                ctx_wrapper=ctx.run_context,
+                data=SimpleNamespace(command=command),
+            )
+            return await self(request)
+        
+        # Create schema for the command parameter
+        params_schema = {
+            "type": "object",
+            "properties": {
+                "command": {
+                    "type": "string",
+                    "description": "The shell command to execute in the container",
+                }
+            },
+            "required": ["command"],
+            "additionalProperties": False,
+        }
+        
+        async def on_invoke(ctx: ToolContext[Any], args_json: str) -> Any:
+            args = json.loads(args_json)
+            return await shell_function(ctx, args["command"])
+        
+        return FunctionTool(
+            name="local_shell",
+            description="Execute a shell command in the Apptainer container. Use this to run bash commands, list files, read files, write files, compile code, run tests, etc.",
+            params_json_schema=params_schema,
+            on_invoke_tool=on_invoke,
+            strict_json_schema=True,
+        )
 

@@ -30,13 +30,22 @@ class SWEAgentRunner:
 
         logger.info("Starting SWE-agent run", extra={"input": input_text[:200]})
 
-        await DEFAULT_AGENT_RUNNER.run(
-            agent,
-            input_text,
-            context=context,
-            run_config=run_config,
-            max_turns=run_config.max_turns,
-        )
+        try:
+            await DEFAULT_AGENT_RUNNER.run(
+                agent,
+                input_text,
+                context=context,
+                run_config=run_config,
+                max_turns=run_config.max_turns,
+            )
 
-        logger.info("SWE-agent run complete")
+            logger.info("SWE-agent run complete")
+        
+        finally:
+            # Clean up MCP servers to avoid async cleanup errors
+            for mcp_server in agent.mcp_servers:
+                try:
+                    await mcp_server.cleanup()
+                except Exception as e:
+                    logger.warning(f"Error cleaning up MCP server: {e}")
 

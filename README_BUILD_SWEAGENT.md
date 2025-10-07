@@ -62,17 +62,14 @@ b. install filesystem mcp server locally
 ```bash
 cd ~/projects/openai-agents-self
 
-# Create a directory for MCP servers
-mkdir -p mcp-servers
-cd mcp-servers
+# Create MCP servers directory
+mkdir -p mcp-servers/filesystem
+cd mcp-servers/filesystem
 
-# Clone from GitHub (more control)
-git clone https://github.com/modelcontextprotocol/servers.git mcp-filesystem
-cd mcp-filesystem/src/filesystem
+# Initialize and install the filesystem server
+npm init -y
+npm install @modelcontextprotocol/server-filesystem
 
-# Install dependencies locally
-npm install
-
-# Build the server
-npm run build
+# Verify installation
+npx @modelcontextprotocol/server-filesystem --help
 ```

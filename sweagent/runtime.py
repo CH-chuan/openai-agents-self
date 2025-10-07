@@ -8,8 +8,7 @@ from typing import Any
 from agents import Agent, RunConfig, set_default_openai_client
 from agents.model_settings import ModelSettings
 from agents.models.interface import Model
-from agents.models.openai_responses import OpenAIResponsesModel
-from agents.tool import LocalShellTool
+from agents.models.openai_chatcompletions import OpenAIChatCompletionsModel
 from openai import AsyncOpenAI
 
 from sweagent.commands import ApptainerCommandExecutor
@@ -33,7 +32,8 @@ class SWEAgentRuntime:
                 security=self.config.security,
                 command_config=self.config.commands,
             )
-            shell_tool = LocalShellTool(executor=executor)
+            # Convert to FunctionTool for ChatCompletions API compatibility
+            shell_tool = executor.to_function_tool()
             tools.append(shell_tool)
 
         mcp_servers = []
@@ -45,9 +45,13 @@ class SWEAgentRuntime:
             api_key=self.config.model.api_key,
             base_url=self.config.model.api_base,
         )
-        set_default_openai_client(openai_client, use_for_tracing=True)
+        # Disable tracing for non-OpenAI endpoints (like VLLM)
+        # This prevents 401 errors when the SDK tries to send traces to OpenAI
+        use_for_tracing = self.config.model.api_base is None or "openai.com" in str(self.config.model.api_base)
+        set_default_openai_client(openai_client, use_for_tracing=use_for_tracing)
 
-        model: Model = OpenAIResponsesModel(
+        # Use ChatCompletions model for VLLM compatibility
+        model: Model = OpenAIChatCompletionsModel(
             model=self.config.model.name,
             openai_client=openai_client,
         )

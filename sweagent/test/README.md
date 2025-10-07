@@ -40,6 +40,30 @@ Integration tests for the complete agent runtime and execution flow.
 - Mocks subprocess execution for container isolation
 - Validates end-to-end agent workflow without external dependencies
 
+### `test_mcp_integration.py`
+
+Integration tests for MCP filesystem server with Apptainer runtime.
+
+**What it tests:**
+- MCP filesystem server initialization from config
+- Agent construction with both shell tools and MCP tools
+- Architecture verification: MCP (host) + Apptainer (container) + bind mounts
+- MCP tool allowlist filtering
+
+**Key Architecture:**
+- **MCP filesystem server** runs on HOST, accesses HOST filesystem paths
+- **Apptainer shell commands** run in CONTAINER, access CONTAINER filesystem paths
+- **Bind mounts** bridge the two: `host_path:container_path`
+  - Example: `/host/data:/workspace/data`
+  - MCP can read: `/host/data/file.txt` (host path)
+  - Shell can read: `/workspace/data/file.txt` (container path)
+  - Both access the SAME physical file
+
+**Mock strategy:**
+- Mocks container execution only
+- Validates MCP server configuration and tool registration
+- No actual filesystem operations needed
+
 ### `test_real_model.py`
 
 **Live model integration tests** - requires real API credentials.
@@ -62,7 +86,7 @@ Integration tests for the complete agent runtime and execution flow.
 
 ### `test_config.yaml`
 
-Minimal configuration for test scenarios. Includes model settings, security blocks, step limits, and container paths. MCP section is commented out to test optional MCP handling. Does not require real API keys or `.sif` images to run.
+Minimal configuration for test scenarios. Includes model settings, security blocks, step limits, container paths, and MCP filesystem server. The MCP server points to the local `mcp-servers/filesystem` installation. Does not require real API keys or `.sif` images to run tests (container execution is mocked).
 
 ## Running Tests
 

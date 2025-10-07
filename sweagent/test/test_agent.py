@@ -31,7 +31,7 @@ async def test_agent_builds_successfully():
         assert agent is not None
         assert agent.name == "swe-agent"
         assert len(agent.tools) == 1  # LocalShellTool
-        assert agent.mcp_servers == []  # No MCP in test config
+        assert len(agent.mcp_servers) == 1  # MCP filesystem server enabled
 
 
 @pytest.mark.asyncio
