@@ -15,7 +15,7 @@ from unittest.mock import patch
 
 from dotenv import load_dotenv
 
-from agents.run import DEFAULT_AGENT_RUNNER
+from agents.run import Runner
 from sweagent.config import AgentConfigLoader
 from sweagent.runtime import SWEAgentRuntime
 
@@ -69,7 +69,7 @@ async def main():
          patch("sweagent.commands.write_json_log"):
         
         # Build agent
-        agent = runtime.build_agent()
+        agent = await runtime.build_agent()
         run_config = runtime.build_run_config()
         
         print(f"Agent: {agent.name}")
@@ -94,7 +94,7 @@ async def main():
         
         try:
             # Run the agent
-            result = await DEFAULT_AGENT_RUNNER.run(
+            result = await Runner.run(
                 agent,
                 task_input,
                 run_config=run_config,

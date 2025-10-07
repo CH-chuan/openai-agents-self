@@ -8,10 +8,11 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, AsyncMock
 
 import pytest
 
+from agents.run import Runner
 from sweagent.config import AgentConfigLoader
 from sweagent.runtime import SWEAgentRuntime
 
@@ -49,14 +50,21 @@ async def test_agent_has_both_shell_and_mcp_tools():
     async def fake_subprocess(*args, **kwargs):
         return DummyProcess()
     
+    # Mock MCP server connection to avoid actual subprocess creation
+    mock_mcp_server = MagicMock()
+    mock_mcp_server.name = "filesystem"
+    mock_mcp_server.connect = AsyncMock()
+    mock_mcp_server.cleanup = AsyncMock()
+    
     with patch("asyncio.create_subprocess_exec", side_effect=fake_subprocess), \
          patch("sweagent.commands.write_json_log"), \
-         patch("sweagent.runtime.AsyncOpenAI") as mock_openai:
+         patch("sweagent.runtime.AsyncOpenAI") as mock_openai, \
+         patch("sweagent.sweagent_mcp.MCPServerFactory.create", return_value=mock_mcp_server):
         
         mock_client = MagicMock()
         mock_openai.return_value = mock_client
         
-        agent = runtime.build_agent()
+        agent = await runtime.build_agent()
         
         # Verify agent has shell tool
         assert len(agent.tools) == 1
@@ -118,29 +126,29 @@ async def test_mcp_tool_allowlist_filtering():
     
     runtime = SWEAgentRuntime(config=config)
     
+    # Mock MCP server connection to avoid actual subprocess creation
+    mock_mcp_server = MagicMock()
+    mock_mcp_server.name = "filesystem"
+    mock_mcp_server.connect = AsyncMock()
+    mock_mcp_server.cleanup = AsyncMock()
+    mock_mcp_server.tool_filter = {
+        "allowed_tool_names": ["read_file", "write_file", "list_directory"]
+    }
+    
     with patch("sweagent.runtime.AsyncOpenAI") as mock_openai, \
-         patch("sweagent.commands.write_json_log"):
+         patch("sweagent.commands.write_json_log"), \
+         patch("sweagent.sweagent_mcp.MCPServerFactory.create", return_value=mock_mcp_server):
         
         mock_client = MagicMock()
         mock_openai.return_value = mock_client
         
-        # Mock subprocess
-        class DummyProcess:
-            returncode = 0
-            async def communicate(self):
-                return b"", b""
+        agent = await runtime.build_agent()
         
-        async def fake_subprocess(*args, **kwargs):
-            return DummyProcess()
-        
-        with patch("asyncio.create_subprocess_exec", side_effect=fake_subprocess):
-            agent = runtime.build_agent()
-            
-            # Verify MCP server has tool filter applied
-            mcp_server = agent.mcp_servers[0]
-            assert mcp_server.tool_filter is not None
-            assert "allowed_tool_names" in mcp_server.tool_filter
-            assert "read_file" in mcp_server.tool_filter["allowed_tool_names"]
-            assert "write_file" in mcp_server.tool_filter["allowed_tool_names"]
-            assert "list_directory" in mcp_server.tool_filter["allowed_tool_names"]
+        # Verify MCP server has tool filter applied
+        mcp_server = agent.mcp_servers[0]
+        assert mcp_server.tool_filter is not None
+        assert "allowed_tool_names" in mcp_server.tool_filter
+        assert "read_file" in mcp_server.tool_filter["allowed_tool_names"]
+        assert "write_file" in mcp_server.tool_filter["allowed_tool_names"]
+        assert "list_directory" in mcp_server.tool_filter["allowed_tool_names"]
 
