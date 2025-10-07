@@ -3,9 +3,9 @@
 
 agent:
   model:
-    name: azure/gpt-4o
-    api_key: ${AZURE_API_KEY}
-    api_base: ${AZURE_API_BASE}
+    name: openai/gpt-oss-20b
+    api_key: ${VLLM_API_KEY}
+    api_base: ${VLLM_API_BASE}
     temperature: 0.6
 
   security:
@@ -16,7 +16,7 @@ agent:
       - sudo
 
   limits:
-    max_tokens: 50000
+    max_tokens: 131,072
     max_steps: 30
 
   templates:
@@ -25,7 +25,7 @@ agent:
       Execute bash commands and submit solutions when done.
 
   mcp:
-    path: /opt/mcp/filesystem/server
+    path: /home/cche/projects/openai-agents-self/mcp-servers/filesystem/node_modules/.bin/mcp-server-filesystem
     tool_allowlist:
       - read_file
       - write_file
@@ -40,6 +40,5 @@ agent:
     bind_mounts:
       - /host/data:/workspace/data
       - /host/cache:/workspace/.cache
-    env:
-      SWE_BENCH_DATASET: /workspace/data/swe-bench
+
 
