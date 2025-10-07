@@ -117,7 +117,9 @@ python sweagent/cli.py \
 
 The current implementation uses vLLM to host `openai/gpt-oss-20b`, which has compatibility issues with the OpenAI Chat Completions format.
 
-**Problem:** The agent execution logic checks `processed_response.has_tools_or_approvals_to_run()`, which returns `False` when there are no tool calls to process, causing execution to stop prematurely.
+**Problem:** The agent execution logic checks `processed_response.has_tools_or_approvals_to_run()`, which returns `False` when there are no tool calls to process, causing execution to stop prematurely. However, here should be a rety mechanism, allowing agent to rety for certain max_num, with each time notify the agent the tool call is not activated successfully.
+
+While the root cause of tool call not being successful are described below:
 
 **Example Raw Response** (from `src/agents/models/openai_chatcompletions.py` lines 99-110):
 
