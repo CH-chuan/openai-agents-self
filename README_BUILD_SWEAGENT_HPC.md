@@ -13,8 +13,8 @@ Load the miniforge module and create a virtual environment:
 module load miniforge
 
 # Create and activate a virtual environment
-python -m venv venv
-source venv/bin/activate
+conda create -n sweagent python=3.10
+conda activate sweagent
 ```
 
 **Important:** Before installing dependencies, you need to modify `requirements.txt`:
@@ -39,7 +39,7 @@ pip install -r requirements.txt
 ```bash
 # Request an interactive job with sufficient memory
 # Replace <your_account> with your actual HPC account/allocation
-ijob -A <your_account> -p interactive --mem=50G
+ijob -A jingjing_lab -p interactive --mem=50G
 ```
 
 Once your interactive job starts, load the apptainer module and build the test instance image:
@@ -96,6 +96,18 @@ npm install @modelcontextprotocol/server-filesystem
 ```
 
 ### 4. Run Component Tests
+
+Deploy model by vLLM:
+```bash
+pip isntall vllm
+vllm serve openai/gpt-oss-20b
+```
+
+Set .env file by including"
+```
+VLLM_API_KEY="api-key-not-required"
+VLLM_API_BASE="http://0.0.0.0:8000/v1"
+```
 
 Execute the test suite to verify all components work correctly:
 

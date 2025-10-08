@@ -26,7 +26,7 @@ agent:
       Now I only want you to list the files in the current directory using command ls.
 
   mcp:
-    path: /home/cche/projects/openai-agents-self/mcp-servers/filesystem/node_modules/.bin/mcp-server-filesystem
+    path: ./mcp-servers/filesystem
     tool_allowlist:
       - read_file
       - write_file
@@ -36,7 +36,7 @@ agent:
     use_structured_content: false
 
   commands:
-    apptainer_image: ./swebench_instances/images/swebench_sweb.eval.x86_64.astropy_1776_astropy-12907.sif
+    apptainer_image: ./swebench_instances/images/astropy_1776_astropy-12907.sif
     working_directory: /testbed
     bind_mounts:
       - /host/data:/workspace/data

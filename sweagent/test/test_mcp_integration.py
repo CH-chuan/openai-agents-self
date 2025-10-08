@@ -26,7 +26,7 @@ async def test_mcp_server_initializes():
     
     # Verify config loaded MCP settings
     assert config.mcp is not None
-    assert "mcp-server-filesystem" in str(config.mcp.path)
+    assert "mcp-servers/filesystem" in str(config.mcp.path)
     assert "read_file" in config.mcp.tool_allowlist
     assert "write_file" in config.mcp.tool_allowlist
     assert "list_directory" in config.mcp.tool_allowlist
