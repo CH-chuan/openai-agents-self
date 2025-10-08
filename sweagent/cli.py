@@ -202,15 +202,25 @@ async def run_single_instance(instance: SWEBenchInstance, agent_config: Dict[str
         print(f"✓ Saved configs to: {instance_dir}")
         
         # Initialize and run SWE-agent with the updated config
-        runner = SWEAgentRunner(config_path=agent_config_path)
+        runner = SWEAgentRunner(
+            config_path=agent_config_path,
+            instance_id=instance.instance_id,
+            model_name=updated_config['agent']['model']['name'],
+        )
         
         print(f"✓ SWE-agent initialized")
         print(f"Running SWE-agent with problem statement...")
+        print(f"Instance: {instance.instance_id}")
+        print(f"Model: {updated_config['agent']['model']['name']}")
         
         # Run the agent with the problem statement
         await runner.run(instance.problem_statement)
         
         print(f"✓ SWE-agent completed successfully")
+        
+        # Report workspace location if workspace was created
+        workspace_pattern = f"*{instance.instance_id.replace('__', '_')}*"
+        print(f"\n💾 Workspace: workspaces/{workspace_pattern}")
         print(f"✓ Completed processing {instance.instance_id}")
         
         # TODO: Save trajectory.jsonl with agent chat log, tool execution, and environment feedback

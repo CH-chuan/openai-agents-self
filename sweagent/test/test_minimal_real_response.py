@@ -41,8 +41,12 @@ async def main():
     print(f"Temperature: {config.model.temperature}")
     print()
     
-    # Build runtime
-    runtime = SWEAgentRuntime(config=config)
+    # Build runtime (without instance metadata for this test)
+    runtime = SWEAgentRuntime(
+        config=config,
+        instance_id=None,
+        model_name=None,
+    )
     
     # Mock only the Apptainer container execution
     # (we don't have actual .sif images)

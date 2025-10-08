@@ -22,9 +22,11 @@ async def test_apptainer_command_executor_creates_function_tool():
     config_path = Path(__file__).with_name("test_config.yaml")
     config = AgentConfigLoader(path=config_path).load()
 
+    # Test without workspace (backward compatibility)
     executor = ApptainerCommandExecutor(
         security=config.security,
         command_config=config.commands,
+        workspace_info=None,  # No workspace, should use config bind_mounts
     )
 
     # Test that the executor can create a function tool

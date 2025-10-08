@@ -7,12 +7,13 @@ import json
 import shlex
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable, Sequence
+from typing import Any, Iterable, Optional, Sequence
 
 from agents.tool import FunctionTool, LocalShellCommandRequest, ToolContext
 
 from sweagent.config import CommandConfig, SecurityConfig
 from sweagent.sweagent_logging import logger, write_json_log
+from sweagent.workspace import WorkspaceInfo
 
 
 class CommandExecutionError(RuntimeError):
@@ -25,6 +26,7 @@ class ApptainerCommandExecutor:
 
     security: SecurityConfig
     command_config: CommandConfig
+    workspace_info: Optional[WorkspaceInfo] = None
 
     async def __call__(self, request: LocalShellCommandRequest) -> str:
         command_line = request.data.command
@@ -96,9 +98,23 @@ class ApptainerCommandExecutor:
             "apptainer",
             "exec",
         ]
-        base.extend(self._format_bind_mounts(self.command_config.bind_mounts))
-        if self.command_config.working_directory:
-            base.extend(["--pwd", str(self.command_config.working_directory)])
+        
+        # Use workspace bind mounts if available, otherwise use config bind mounts
+        if self.workspace_info:
+            # Workspace-based bind mounts (takes priority)
+            workspace_bind_mounts = [
+                f"{self.workspace_info.testbed_dir.absolute()}:/testbed",
+                f"{self.workspace_info.outputs_dir.absolute()}:/outputs",
+            ]
+            base.extend(self._format_bind_mounts(workspace_bind_mounts))
+            # Working directory is always /testbed when using workspace
+            base.extend(["--pwd", "/testbed"])
+        else:
+            # Fallback to config bind mounts
+            base.extend(self._format_bind_mounts(self.command_config.bind_mounts))
+            if self.command_config.working_directory:
+                base.extend(["--pwd", str(self.command_config.working_directory)])
+        
         for key, value in self.command_config.env.items():
             base.extend(["--env", f"{key}={value}"])
         base.append(str(self.command_config.apptainer_image))

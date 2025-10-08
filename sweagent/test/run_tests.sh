@@ -67,8 +67,18 @@ else
 fi
 echo ""
 
-# Test 4: Real MCP execution tests (requires Apptainer images)
-echo -e "${YELLOW}4. Running real MCP execution tests...${NC}"
+# Test 4: Workspace tests (pytest)
+echo -e "${YELLOW}4. Running workspace tests...${NC}"
+if python -m pytest "$TEST_DIR/test_workspace.py" -v; then
+    echo -e "${GREEN}✓ Workspace tests passed${NC}"
+else
+    echo -e "${RED}✗ Workspace tests failed${NC}"
+    exit 1
+fi
+echo ""
+
+# Test 5: Real MCP execution tests (requires Apptainer images)
+echo -e "${YELLOW}5. Running real MCP execution tests...${NC}"
 if python -m pytest "$TEST_DIR/test_mcp_real_execution.py" -v --tb=short; then
     echo -e "${GREEN}✓ Real MCP execution tests passed${NC}"
 else
@@ -78,8 +88,8 @@ else
 fi
 echo ""
 
-# Test 5: Run all pytest tests together
-echo -e "${YELLOW}5. Running all pytest tests together...${NC}"
+# Test 6: Run all pytest tests together
+echo -e "${YELLOW}6. Running all pytest tests together...${NC}"
 if python -m pytest "$TEST_DIR" -v --tb=short; then
     echo -e "${GREEN}✓ All pytest tests passed${NC}"
 else
@@ -94,5 +104,6 @@ echo "Test Summary:"
 echo "- Minimal real response test: ✓"
 echo "- MCP integration tests: ✓"
 echo "- Commands tests: ✓"
+echo "- Workspace tests: ✓"
 echo "- Real MCP execution tests: ✓"
 echo "- All pytest tests: ✓"

@@ -54,6 +54,15 @@ class CommandConfig:
 
 
 @dataclass
+class WorkspaceConfig:
+    """Configuration for workspace management."""
+
+    base_dir: Path = Path("workspaces")
+    auto_cleanup: bool = False
+    max_age_hours: int = 24
+
+
+@dataclass
 class LimitsConfig:
     """Limits for agent execution."""
 
@@ -79,6 +88,7 @@ class SWEAgentConfig:
     templates: TemplatesConfig
     mcp: MCPConfig | None
     commands: CommandConfig | None
+    workspace: WorkspaceConfig = field(default_factory=WorkspaceConfig)
 
 
 def _as_dict(node: Any, *, context: str) -> MutableMapping[str, Any]:
@@ -214,6 +224,27 @@ def parse_commands(config: Mapping[str, Any]) -> CommandConfig:
     )
 
 
+def parse_workspace(config: Mapping[str, Any]) -> WorkspaceConfig:
+    """Parse workspace configuration."""
+    base_dir = config.get("base_dir", "workspaces")
+    if not isinstance(base_dir, str):
+        raise ConfigError("workspace.base_dir must be a string path")
+    
+    auto_cleanup = config.get("auto_cleanup", False)
+    if not isinstance(auto_cleanup, bool):
+        raise ConfigError("workspace.auto_cleanup must be a boolean")
+    
+    max_age_hours = config.get("max_age_hours", 24)
+    if not isinstance(max_age_hours, int):
+        raise ConfigError("workspace.max_age_hours must be an integer")
+    
+    return WorkspaceConfig(
+        base_dir=Path(base_dir),
+        auto_cleanup=auto_cleanup,
+        max_age_hours=max_age_hours,
+    )
+
+
 @dataclass
 class AgentConfigLoader:
     """Loads SWE-agent configurations from YAML files."""
@@ -229,6 +260,7 @@ class AgentConfigLoader:
         templates_section = _load_section(agent_section, "templates", required=False)
         mcp_section = _load_section(agent_section, "mcp", required=False)
         commands_section = _load_section(agent_section, "commands", required=False)
+        workspace_section = _load_section(agent_section, "workspace", required=False)
 
         return SWEAgentConfig(
             model=parse_model(model_section),
@@ -237,6 +269,7 @@ class AgentConfigLoader:
             templates=parse_templates(templates_section),
             mcp=parse_mcp(mcp_section) if mcp_section else None,
             commands=parse_commands(commands_section) if commands_section else None,
+            workspace=parse_workspace(workspace_section) if workspace_section else WorkspaceConfig(),
         )
 
     def _read_yaml(self) -> Mapping[str, Any]:

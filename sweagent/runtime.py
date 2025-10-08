@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from pathlib import Path
+from typing import Any, Optional
 
 from agents import Agent, RunConfig, set_default_openai_client
 from agents.model_settings import ModelSettings
@@ -15,6 +16,7 @@ from sweagent.commands import ApptainerCommandExecutor
 from sweagent.config import SWEAgentConfig
 from sweagent.sweagent_logging import configure_logging, logger
 from sweagent.sweagent_mcp import MCPServerFactory
+from sweagent.workspace import WorkspaceManager, WorkspaceInfo
 
 
 @dataclass
@@ -22,15 +24,35 @@ class SWEAgentRuntime:
     """Constructs agent instances based on configuration."""
 
     config: SWEAgentConfig
+    instance_id: Optional[str] = None
+    model_name: Optional[str] = None
+    workspace_info: Optional[WorkspaceInfo] = None
 
     async def build_agent(self) -> Agent[Any]:
         configure_logging()
+        
+        # Create workspace if instance metadata provided
+        if self.instance_id and self.model_name and self.config.commands:
+            workspace_manager = WorkspaceManager(base_dir=self.config.workspace.base_dir)
+            self.workspace_info = workspace_manager.create_workspace(
+                instance_id=self.instance_id,
+                model_name=self.model_name,
+                sif_path=self.config.commands.apptainer_image,
+            )
+            logger.info(
+                "Workspace created for instance",
+                extra={
+                    "instance_id": self.instance_id,
+                    "workspace_dir": str(self.workspace_info.workspace_dir),
+                }
+            )
         
         tools = []
         if self.config.commands is not None:
             executor = ApptainerCommandExecutor(
                 security=self.config.security,
                 command_config=self.config.commands,
+                workspace_info=self.workspace_info,  # Pass workspace info
             )
             # Convert to FunctionTool for ChatCompletions API compatibility
             shell_tool = executor.to_function_tool()
@@ -38,7 +60,10 @@ class SWEAgentRuntime:
 
         mcp_servers = []
         if self.config.mcp is not None:
-            mcp_server = MCPServerFactory(self.config.mcp).create()
+            mcp_server = MCPServerFactory(
+                config=self.config.mcp,
+                workspace_info=self.workspace_info,  # Pass workspace info
+            ).create()
             # Connect the MCP server before adding it to the agent
             await mcp_server.connect()
             mcp_servers.append(mcp_server)

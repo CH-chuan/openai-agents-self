@@ -39,7 +39,12 @@ async def test_agent_has_both_shell_and_mcp_tools():
     config_path = Path(__file__).with_name("test_config.yaml")
     config = AgentConfigLoader(path=config_path).load()
     
-    runtime = SWEAgentRuntime(config=config)
+    # Test without instance metadata (backward compatibility)
+    runtime = SWEAgentRuntime(
+        config=config,
+        instance_id=None,  # No instance metadata
+        model_name=None,
+    )
     
     # Mock subprocess for shell commands
     class DummyProcess:
@@ -124,7 +129,12 @@ async def test_mcp_tool_allowlist_filtering():
     config_path = Path(__file__).with_name("test_config.yaml")
     config = AgentConfigLoader(path=config_path).load()
     
-    runtime = SWEAgentRuntime(config=config)
+    # Test without instance metadata (backward compatibility)
+    runtime = SWEAgentRuntime(
+        config=config,
+        instance_id=None,
+        model_name=None,
+    )
     
     # Mock MCP server connection to avoid actual subprocess creation
     mock_mcp_server = MagicMock()
