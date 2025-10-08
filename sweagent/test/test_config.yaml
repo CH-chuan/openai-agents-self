@@ -26,7 +26,7 @@ agent:
       Now I only want you to list the files in the current directory using command ls.
 
   mcp:
-    path: ./mcp-servers/filesystem
+    path: ./mcp-servers/filesystem/node_modules/.bin/mcp-server-filesystem
     tool_allowlist:
       - read_file
       - write_file

@@ -17,15 +17,6 @@ conda create -n sweagent python=3.10
 conda activate sweagent
 ```
 
-**Important:** Before installing dependencies, you need to modify `requirements.txt`:
-
-```bash
-# Remove the version specification from backports.asyncio.runner
-# Change: backports.asyncio.runner==x.x.x
-# To:     backports.asyncio.runner
-sed -i 's/backports\.asyncio\.runner==.*/backports.asyncio.runner/' requirements.txt
-```
-
 Then install dependencies:
 
 ```bash
@@ -99,7 +90,7 @@ npm install @modelcontextprotocol/server-filesystem
 
 Deploy model by vLLM:
 ```bash
-pip isntall vllm
+pip install vllm
 vllm serve openai/gpt-oss-20b
 ```
 
