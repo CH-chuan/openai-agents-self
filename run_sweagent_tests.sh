@@ -7,4 +7,6 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Run the test script
+# first chomd +x the script
+chmod +x "$SCRIPT_DIR/sweagent/test/run_tests.sh"
 "$SCRIPT_DIR/sweagent/test/run_tests.sh"

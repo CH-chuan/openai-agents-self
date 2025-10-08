@@ -1,74 +1,84 @@
-# SWE Agent Setup Guide 7 Problems to Solve
+# SWE Agent Setup Guide for HPC Environment
 
-This guide walks you through setting up and testing the SWE Agent with MCP server integration.
-
-## Prerequisites
-
-- Python 3.8+
-- Node.js 20.x LTS
-- Apptainer/Singularity
+This guide walks you through setting up and testing the SWE Agent with MCP server integration on HPC systems.
 
 ## Setup Instructions
 
 ### 1. Python Environment Setup
 
-Create and activate a virtual environment, then install dependencies:
+Load the miniforge module and create a virtual environment:
 
 ```bash
+# Load miniforge to enable venv
+module load miniforge
+
+# Create and activate a virtual environment
 python -m venv venv
 source venv/bin/activate
+```
+
+**Important:** Before installing dependencies, you need to modify `requirements.txt`:
+
+```bash
+# Remove the version specification from backports.asyncio.runner
+# Change: backports.asyncio.runner==x.x.x
+# To:     backports.asyncio.runner
+sed -i 's/backports\.asyncio\.runner==.*/backports.asyncio.runner/' requirements.txt
+```
+
+Then install dependencies:
+
+```bash
 pip install -r requirements.txt
 ```
 
 ### 2. Apptainer Image Setup
 
-Build the test instance image:
+**Important:** Building containers requires significant memory. Request an interactive job before building:
 
 ```bash
+# Request an interactive job with sufficient memory
+# Replace <your_account> with your actual HPC account/allocation
+ijob -A <your_account> -p interactive --mem=50G
+```
+
+Once your interactive job starts, load the apptainer module and build the test instance image:
+
+```bash
+# Load apptainer module
+module load apptainer
+
+# Build the test instance image
 python swebench_instances/build_test_instance.py
 ```
+
+**Note:** The generated `.sif` filename may be shorter than shown in the documentation. Look for the actual filename in the `swebench_instances/images/` directory.
 
 Verify the image works correctly:
 
 ```bash
-apptainer shell swebench_instances/images/astropy_1776_astropy-12907.sif
+# Use the actual .sif filename from your images directory
+apptainer shell swebench_instances/images/<your_image_name>.sif
 cd /testbed  # Should enter the image root path containing a repo with a bug
+exit  # Exit the container after verification
 ```
 
 ### 3. MCP Server Setup
 
 We use the official filesystem MCP server for testing.
 
-#### 3a. Install Node.js (if not already installed)
+#### 3a. Load Node.js Module
+
+Instead of installing Node.js manually, use the HPC module system:
 
 ```bash
-# Download and run the setup script for Node.js 20.x LTS
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-
-# Install Node.js (includes npm and npx)
-sudo apt-get install -y nodejs
+# Load the Node.js module (v24.5.0)
+module load nodejs
 
 # Verify installation
-node --version    # Should show v20.x.x
-npm --version     # Should show 10.x.x
-npx --version     # Should show 10.x.x
-```
-
-Test the installation:
-
-```bash
-# Create a test directory
-cd /tmp
-mkdir node-test && cd node-test
-
-# Initialize package.json
-npm init -y
-
-# Install a test package
-npm install lodash
-
-# Test npx
-npx cowsay "Node.js is installed!"
+node --version    # Should show v24.5.0
+npm --version
+npx --version
 ```
 
 #### 3b. Install Filesystem MCP Server
@@ -90,10 +100,41 @@ npm install @modelcontextprotocol/server-filesystem
 Execute the test suite to verify all components work correctly:
 
 ```bash
+# Make sure you're in an interactive job or on a compute node
 ./run_sweagent_tests.sh
 ```
 
 At this point, all components should be functioning properly.
+
+---
+
+## HPC Environment Tips
+
+### Module Loading Best Practices
+
+To avoid repeatedly loading modules, you can add them to your shell configuration:
+
+```bash
+# Add to ~/.bashrc or ~/.bash_profile
+module load miniforge
+module load apptainer
+module load nodejs
+```
+
+### Resource Requirements
+
+- **Frontend nodes**: Suitable for light tasks (editing, small tests)
+- **Interactive jobs**: Required for building containers and running agent tests
+  - Minimum memory: 50G
+  - Recommended for development and testing
+- **Batch jobs**: Best for production runs and multiple experiments
+
+### Common Issues
+
+1. **Container build fails**: Make sure you're running on an interactive job with sufficient memory (≥50G)
+2. **Module not found**: Check available modules with `module avail <module_name>`
+3. **Permission issues**: Ensure you have write access to the project directory
+4. **SIF file not found**: Check the actual filename in `swebench_instances/images/` directory
 
 ---
 
@@ -106,6 +147,7 @@ At this point, all components should be functioning properly.
 #### Running the Agent
 
 ```bash
+# Make sure you're in an interactive job with sufficient resources
 python sweagent/cli.py \
     --agent-config sweagent/agent_config.yaml \
     --task-config swebench_instances/task_config.yaml
@@ -117,7 +159,7 @@ python sweagent/cli.py \
 
 The current implementation uses vLLM to host `openai/gpt-oss-20b`, which has compatibility issues with the OpenAI Chat Completions format.
 
-**Problem:** The agent execution logic checks `processed_response.has_tools_or_approvals_to_run()`, which returns `False` when there are no tool calls to process, causing execution to stop prematurely. However, here should be a rety mechanism, allowing agent to rety for certain max_num, with each time notify the agent the tool call is not activated successfully.
+**Problem:** The agent execution logic checks `processed_response.has_tools_or_approvals_to_run()`, which returns `False` when there are no tool calls to process, causing execution to stop prematurely. However, here should be a retry mechanism, allowing agent to retry for certain max_num, with each time notify the agent the tool call is not activated successfully.
 
 While the root cause of tool call not being successful are described below:
 
@@ -187,3 +229,4 @@ Once these compatibility issues are resolved, the pipeline will be complete with
 - Prompt engineering and optimization
 - Adapting data formats to OpenAI Chat Completions standard
 - Adding new capabilities through MCP servers
+

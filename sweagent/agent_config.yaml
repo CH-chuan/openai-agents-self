@@ -48,7 +48,7 @@ agent:
       Begin by using list_directory to explore the current working directory.
 
   mcp:
-    path: /home/cche/projects/openai-agents-self/mcp-servers/filesystem/node_modules/.bin/mcp-server-filesystem
+    path: ./mcp-servers/filesystem/node_modules/.bin/mcp-server-filesystem
     tool_allowlist:
       - read_file
       - write_file
