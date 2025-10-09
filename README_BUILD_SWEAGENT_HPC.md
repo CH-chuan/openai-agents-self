@@ -150,6 +150,7 @@ module load nodejs
 #### Running the Agent
 
 ```bash
+# with these export settings, agent raw input and raw response can be output
 export OPENAI_AGENTS_DONT_LOG_MODEL_DATA=0
 export OPENAI_AGENTS_DONT_LOG_TOOL_DATA=0
 python sweagent/cli.py --agent-config sweagent/agent_config.yaml --task-config swebench_instances/task_config.yaml
