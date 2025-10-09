@@ -119,13 +119,21 @@ class WorkspaceManager:
             # Bootstrap testbed from container
             self._copy_testbed_from_sif(sif_path, testbed_dir)
             
-            # Save metadata
+            # Save metadata with relative path from project root
+            try:
+                # Try to make path relative to current working directory (project root)
+                relative_sif_path = sif_path.absolute().relative_to(Path.cwd())
+                sif_path_str = str(relative_sif_path)
+            except ValueError:
+                # If sif_path is outside project root, keep absolute path
+                sif_path_str = str(sif_path.absolute())
+            
             metadata = {
                 "instance_id": instance_id,
                 "model_name": model_name,
                 "timestamp": timestamp,
                 "workspace_id": workspace_id,
-                "sif_path": str(sif_path.absolute()),
+                "sif_path": sif_path_str,
                 "created_at": datetime.now().isoformat(),
             }
             

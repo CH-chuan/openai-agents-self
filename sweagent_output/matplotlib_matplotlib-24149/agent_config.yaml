@@ -1,21 +1,19 @@
 agent:
   commands:
-    apptainer_image: swebench_instances/images/matplotlib_1776_matplotlib-24149.sif
-    bind_mounts:
-    - /host/data:/workspace/data
-    - /host/cache:/workspace/.cache
-    working_directory: /testbed
+    env: {}
   limits:
     max_steps: 30
     max_tokens: 131,072
   mcp:
     env:
       MCP_LOG_LEVEL: info
-    path: /home/cche/projects/openai-agents-self/mcp-servers/filesystem/node_modules/.bin/mcp-server-filesystem
+    path: ./mcp-servers/filesystem/node_modules/.bin/mcp-server-filesystem
     tool_allowlist:
     - read_file
     - write_file
-    - list_directory
+    - edit_file
+    - search_files
+    - directory_tree
     use_structured_content: false
   model:
     api_base: http://0.0.0.0:8000/v1
@@ -45,3 +43,7 @@ agent:
       \nYou must use these tools actively. Do not just acknowledge the problem - you\
       \ must take concrete investigative steps.\n\nBegin by using list_directory to\
       \ explore the current working directory."
+  workspace:
+    auto_cleanup: false
+    base_dir: workspaces
+    max_age_hours: 24

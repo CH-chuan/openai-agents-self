@@ -3,6 +3,8 @@
 *.sif
 logs/
 results/
+workspaces/
+sweagent_output/
 
 # MCP Server dependencies
 mcp-servers/*/node_modules/

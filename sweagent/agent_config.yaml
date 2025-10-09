@@ -60,10 +60,13 @@ agent:
     use_structured_content: false
 
   commands:
-    apptainer_image: ./swebench_instances/images/swebench_sweb.eval.x86_64.astropy_1776_astropy-12907.sif
-    working_directory: /testbed
-    bind_mounts:
-      - /host/data:/workspace/data
-      - /host/cache:/workspace/.cache
+    # No apptainer_image needed - CLI provides it per-instance
+    # Optional: custom environment variables
+    env: {}
+  
+  workspace:
+    base_dir: workspaces
+    auto_cleanup: false  # Set true if you want automatic cleanup
+    max_age_hours: 24   # Age threshold for cleanup
 
 

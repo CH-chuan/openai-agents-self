@@ -26,18 +26,22 @@ class SWEAgentRuntime:
     config: SWEAgentConfig
     instance_id: Optional[str] = None
     model_name: Optional[str] = None
+    sif_path: Optional[Path] = None
     workspace_info: Optional[WorkspaceInfo] = None
 
     async def build_agent(self) -> Agent[Any]:
         configure_logging()
         
+        # Determine the sif_path to use
+        determined_sif_path = self._determine_sif_path()
+        
         # Create workspace if instance metadata provided
-        if self.instance_id and self.model_name and self.config.commands:
+        if self.instance_id and self.model_name and determined_sif_path:
             workspace_manager = WorkspaceManager(base_dir=self.config.workspace.base_dir)
             self.workspace_info = workspace_manager.create_workspace(
                 instance_id=self.instance_id,
                 model_name=self.model_name,
-                sif_path=self.config.commands.apptainer_image,
+                sif_path=determined_sif_path,
             )
             logger.info(
                 "Workspace created for instance",
@@ -124,4 +128,25 @@ class SWEAgentRuntime:
         for key, value in self.config.model.extra.items():
             setattr(settings, key, value)
         return settings
+    
+    def _determine_sif_path(self) -> Optional[Path]:
+        """Determine which SIF path to use.
+        
+        Priority:
+        1. Explicitly provided sif_path parameter
+        2. From config.commands.apptainer_image
+        3. None (if neither provided)
+        
+        Returns:
+            Path to SIF file, or None if not available
+        """
+        if self.sif_path:
+            # Explicitly provided - highest priority
+            return self.sif_path
+        elif self.config.commands and self.config.commands.apptainer_image:
+            # From config
+            return self.config.commands.apptainer_image
+        else:
+            # No SIF path available
+            return None
 

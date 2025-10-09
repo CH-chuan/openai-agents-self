@@ -47,7 +47,7 @@ class MCPConfig:
 class CommandConfig:
     """Command execution configuration for Apptainer."""
 
-    apptainer_image: Path
+    apptainer_image: Path | None = None
     working_directory: Path | None = None
     bind_mounts: list[str] = field(default_factory=list)
     env: dict[str, str] = field(default_factory=dict)
@@ -199,8 +199,7 @@ def parse_mcp(config: Mapping[str, Any]) -> MCPConfig:
 
 def parse_commands(config: Mapping[str, Any]) -> CommandConfig:
     image = config.get("apptainer_image")
-    if image is None:
-        raise ConfigError("commands.apptainer_image is required")
+    # apptainer_image is now optional - can be provided at runtime
     working_dir = config.get("working_directory")
     if working_dir is not None and not isinstance(working_dir, str):
         raise ConfigError("commands.working_directory must be a string path")
@@ -215,7 +214,7 @@ def parse_commands(config: Mapping[str, Any]) -> CommandConfig:
     if not isinstance(env, Mapping) or not all(isinstance(k, str) and isinstance(v, str) for k, v in env.items()):
         raise ConfigError("commands.env must be a mapping of string to string")
     return CommandConfig(
-        apptainer_image=_normalize_path(image, field_name="commands.apptainer_image"),
+        apptainer_image=_normalize_path(image, field_name="commands.apptainer_image") if image else None,
         working_directory=_normalize_path(working_dir, field_name="commands.working_directory")
         if working_dir
         else None,

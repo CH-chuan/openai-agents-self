@@ -184,34 +184,31 @@ async def run_single_instance(instance: SWEBenchInstance, agent_config: Dict[str
         
         print(f"✓ Container ready: {sif_path}")
         
-        # Update agent config with the container path for this instance
-        updated_config = agent_config.copy()
-        if 'agent' in updated_config and 'commands' in updated_config['agent']:
-            updated_config['agent']['commands']['apptainer_image'] = sif_path
-        
         # Create instance-specific output directory
         instance_dir = output_path / instance.instance_id.replace('__', '_')
         instance_dir.mkdir(exist_ok=True)
         
-        # Save agent config for this instance
+        # Save agent config for this instance (original config, no modifications)
         agent_config_path = instance_dir / "agent_config.yaml"
         with open(agent_config_path, 'w') as f:
-            yaml.dump(updated_config, f, default_flow_style=False)
-        
+            yaml.dump(agent_config, f, default_flow_style=False)
         
         print(f"✓ Saved configs to: {instance_dir}")
         
-        # Initialize and run SWE-agent with the updated config
+        # Initialize and run SWE-agent with explicit sif_path
+        # No need to modify config - pass sif_path directly!
         runner = SWEAgentRunner(
             config_path=agent_config_path,
             instance_id=instance.instance_id,
-            model_name=updated_config['agent']['model']['name'],
+            model_name=agent_config['agent']['model']['name'],
+            sif_path=Path(sif_path),  # ← Pass explicitly
         )
         
         print(f"✓ SWE-agent initialized")
         print(f"Running SWE-agent with problem statement...")
         print(f"Instance: {instance.instance_id}")
-        print(f"Model: {updated_config['agent']['model']['name']}")
+        print(f"Model: {agent_config['agent']['model']['name']}")
+        print(f"Container: {sif_path}")
         
         # Run the agent with the problem statement
         await runner.run(instance.problem_statement)

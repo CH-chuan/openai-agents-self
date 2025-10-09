@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from agents import enable_verbose_stdout_logging
 from agents.run import DEFAULT_AGENT_RUNNER
 
 from sweagent.config import AgentConfigLoader
@@ -20,9 +21,12 @@ class SWEAgentRunner:
     config_path: Path
     instance_id: str | None = None
     model_name: str | None = None
+    sif_path: Path | None = None
 
     async def run(self, input_text: str, *, context: Any | None = None) -> None:
         configure_logging()
+        # Enable verbose logging for the OpenAI Agents SDK.
+        enable_verbose_stdout_logging()
         loader = AgentConfigLoader(path=self.config_path)
         config = loader.load()
 
@@ -34,6 +38,7 @@ class SWEAgentRunner:
             config=config,
             instance_id=self.instance_id,
             model_name=self.model_name,
+            sif_path=self.sif_path,
         )
         agent = await runtime.build_agent()
         run_config = runtime.build_run_config()

@@ -150,10 +150,9 @@ module load nodejs
 #### Running the Agent
 
 ```bash
-# Make sure you're in an interactive job with sufficient resources
-python sweagent/cli.py \
-    --agent-config sweagent/agent_config.yaml \
-    --task-config swebench_instances/task_config.yaml
+export OPENAI_AGENTS_DONT_LOG_MODEL_DATA=0
+export OPENAI_AGENTS_DONT_LOG_TOOL_DATA=0
+python sweagent/cli.py --agent-config sweagent/agent_config.yaml --task-config swebench_instances/task_config.yaml
 ```
 
 #### Identified Issues
