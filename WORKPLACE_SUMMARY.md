@@ -40,12 +40,6 @@ MCP server:
    - 8 comprehensive tests for workspace functionality
    - All tests passing ✅
 
-3. **`IMPLEMENTATION_PLAN.md`** (NEW)
-   - Detailed implementation roadmap
-
-4. **`IMPLEMENTATION_SUMMARY.md`** (NEW - this file)
-   - Implementation summary and usage guide
-
 ### Files Modified
 
 1. **`sweagent/config.py`**
