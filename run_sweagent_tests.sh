@@ -1,9 +1,5 @@
 #!/bin/bash
 
-module purge
-
-module load miniforge apptainer nodejs
-
 source activate sweagent
 
 # Simple test runner for SWE-agent tests

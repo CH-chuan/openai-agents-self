@@ -7,8 +7,7 @@ workspaces/
 sweagent_output/
 
 # MCP Server dependencies
-mcp-servers/*/node_modules/
-mcp-servers/*/package-lock.json
+mcp-servers/*
 
 
 # macOS Files

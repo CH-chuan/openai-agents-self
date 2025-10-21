@@ -21,7 +21,9 @@ Then install dependencies:
 
 ```bash
 pip install uv
-uv pip install -r pyproject.toml
+uv pip install -e . # use editable mode to include the changes of openai-agent-sdk by ourselves
+
+# for dev purpose, use: uv pip install -e . --group dev
 ```
 
 ### 2. Apptainer Image Setup
