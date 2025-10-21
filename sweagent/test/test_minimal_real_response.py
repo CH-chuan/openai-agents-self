@@ -15,6 +15,9 @@ from unittest.mock import patch
 
 from dotenv import load_dotenv
 
+# print the working dir
+print(os.getcwd())
+
 from agents.run import Runner
 from sweagent.config import AgentConfigLoader
 from sweagent.runtime import SWEAgentRuntime

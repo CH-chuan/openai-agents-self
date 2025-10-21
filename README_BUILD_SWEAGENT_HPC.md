@@ -13,14 +13,15 @@ Load the miniforge module and create a virtual environment:
 module load miniforge
 
 # Create and activate a virtual environment
-conda create -n sweagent python=3.10
+conda create -n sweagent python=3.10 -y
 conda activate sweagent
 ```
 
 Then install dependencies:
 
 ```bash
-pip install -r requirements.txt
+pip install uv
+uv pip install -r pyproject.toml
 ```
 
 ### 2. Apptainer Image Setup
@@ -88,11 +89,62 @@ npm install @modelcontextprotocol/server-filesystem
 
 ### 4. Run Component Tests
 
-Deploy model by vLLM:
+Deploy model by vLLM in a standalone container due to glibc versioning:
+
+Issue discussion: https://github.com/vllm-project/vllm/issues/18967#issuecomment-3370261621
+
+From the start, we still need to install vllm with a new virtual environment:
 ```bash
+# Load miniforge to enable venv
+module load miniforge
+
+# Create and activate a virtual environment
+conda create -n vllm_env python=3.12 -y
+conda activate vllm_env
+
 pip install vllm
-vllm serve openai/gpt-oss-20b
 ```
+
+#### build the workaround container
+Now we start the workaround process (only need to build it once):
+
+First, create a `ubuntu-25.04.def` file with following content:
+```
+Bootstrap: docker
+From: ubuntu:25.04
+
+%post
+    apt-get update
+    apt-get install -y --no-install-recommends gcc g++ libc6-dev build-essential
+    rm -rf /var/lib/apt/lists/*
+```
+
+Then use apptainer to build the image
+```bash
+module load apptainer
+
+apptainer build ubuntu-25.04.sif ubuntu-25.04.def
+```
+
+#### Now we can serve the model
+Now, we have the workaround built, so that we can serve the model with the container.
+To do so, it is better to build a script, `vllm_serve_gpt_oss.sh` as an example:
+```
+#!/bin/bash
+
+module purge
+
+module load miniforge apptainer
+
+source activate vllm_env
+
+apptainer run --nv \
+    --env PATH=$HOME/.conda/envs/vllm_env/bin:$PATH \
+    --env CPATH=/usr/lib/gcc/x86_64-linux-gnu/14/include \
+    ubuntu-25.04.sif \
+    vllm serve openai/gpt-oss-20b
+```
+
 
 Set .env file by including"
 ```
@@ -104,6 +156,9 @@ Execute the test suite to verify all components work correctly:
 
 ```bash
 # Make sure you're in an interactive job or on a compute node
+cd openai-agents-self # if you are not in
+source activate sweagent # if not done so
+ml miniforge nodejs
 ./run_sweagent_tests.sh
 ```
 
