@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterable
-from typing import Any, Literal, cast
+from typing import Any, Literal, Union, cast
 
-from openai import NOT_GIVEN, NotGiven
+from openai import Omit, omit
 from openai.types.chat import (
     ChatCompletionAssistantMessageParam,
     ChatCompletionContentPartImageParam,
+    ChatCompletionContentPartInputAudioParam,
     ChatCompletionContentPartParam,
     ChatCompletionContentPartTextParam,
     ChatCompletionDeveloperMessageParam,
@@ -27,6 +28,7 @@ from openai.types.responses import (
     ResponseFileSearchToolCallParam,
     ResponseFunctionToolCall,
     ResponseFunctionToolCallParam,
+    ResponseInputAudioParam,
     ResponseInputContentParam,
     ResponseInputFileParam,
     ResponseInputImageParam,
@@ -54,9 +56,9 @@ class Converter:
     @classmethod
     def convert_tool_choice(
         cls, tool_choice: Literal["auto", "required", "none"] | str | MCPToolChoice | None
-    ) -> ChatCompletionToolChoiceOptionParam | NotGiven:
+    ) -> ChatCompletionToolChoiceOptionParam | Omit:
         if tool_choice is None:
-            return NOT_GIVEN
+            return omit
         elif isinstance(tool_choice, MCPToolChoice):
             raise UserError("MCPToolChoice is not supported for Chat Completions models")
         elif tool_choice == "auto":
@@ -76,9 +78,9 @@ class Converter:
     @classmethod
     def convert_response_format(
         cls, final_output_schema: AgentOutputSchemaBase | None
-    ) -> ResponseFormat | NotGiven:
+    ) -> ResponseFormat | Omit:
         if not final_output_schema or final_output_schema.is_plain_text():
-            return NOT_GIVEN
+            return omit
 
         return {
             "type": "json_schema",
@@ -370,6 +372,32 @@ class Converter:
                         },
                     )
                 )
+            elif isinstance(c, dict) and c.get("type") == "input_audio":
+                casted_audio_param = cast(ResponseInputAudioParam, c)
+                audio_payload = casted_audio_param.get("input_audio")
+                if not audio_payload:
+                    raise UserError(
+                        f"Only audio data is supported for input_audio {casted_audio_param}"
+                    )
+                if not isinstance(audio_payload, dict):
+                    raise UserError(
+                        f"input_audio must provide audio data and format {casted_audio_param}"
+                    )
+                audio_data = audio_payload.get("data")
+                audio_format = audio_payload.get("format")
+                if not audio_data or not audio_format:
+                    raise UserError(
+                        f"input_audio requires both data and format {casted_audio_param}"
+                    )
+                out.append(
+                    ChatCompletionContentPartInputAudioParam(
+                        type="input_audio",
+                        input_audio={
+                            "data": audio_data,
+                            "format": audio_format,
+                        },
+                    )
+                )
             elif isinstance(c, dict) and c.get("type") == "input_file":
                 casted_file_param = cast(ResponseInputFileParam, c)
                 if "file_data" not in casted_file_param or not casted_file_param["file_data"]:
@@ -589,10 +617,13 @@ class Converter:
             # 5) function call output => tool message
             elif func_output := cls.maybe_function_tool_call_output(item):
                 flush_assistant_message()
+                output_content = cast(
+                    Union[str, Iterable[ResponseInputContentParam]], func_output["output"]
+                )
                 msg: ChatCompletionToolMessageParam = {
                     "role": "tool",
                     "tool_call_id": func_output["call_id"],
-                    "content": func_output["output"],
+                    "content": cls.extract_text_content(output_content),
                 }
                 result.append(msg)
 
