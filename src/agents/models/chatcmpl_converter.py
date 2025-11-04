@@ -127,6 +127,9 @@ class Converter:
 
             items.append(reasoning_item)
 
+        ### Debugging ###
+        # print("output message: %s", message)
+
         message_item = ResponseOutputMessage(
             id=FAKE_RESPONSES_ID,
             content=[],

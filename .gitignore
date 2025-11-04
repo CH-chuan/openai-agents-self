@@ -1,3 +1,11 @@
+# my own
+.specstory/
+logs/
+mcp-servers/
+sweagent/
+swebench_instances/
+workspaces/
+
 # macOS Files
 .DS_Store
 

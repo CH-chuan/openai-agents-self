@@ -60,6 +60,12 @@ class OpenAIChatCompletionsModel(Model):
         conversation_id: str | None = None,  # unused
         prompt: ResponsePromptParam | None = None,
     ) -> ModelResponse:
+
+        #### Debugging ####
+        # print("system_instructions: %s", system_instructions)
+        # print("input: %s", input)
+        # print("prompt: %s", prompt)
+
         with generation_span(
             model=str(self.model),
             model_config=model_settings.to_json_dict() | {"base_url": str(self._client.base_url)},
