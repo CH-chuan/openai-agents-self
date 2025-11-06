@@ -64,7 +64,8 @@ def _build_exec_command(ctx: ApptainerContext, command: str) -> list[str]:
     base.extend(["/bin/bash", "-lc", command])
     return base
 
-
+# tool name run_in_apptainer will be directly inject into agent's memory.
+# during implementation, you may simply want to set the tool name to bash_command, rather than run_in_apptainer.
 @function_tool
 async def run_in_apptainer(ctx: ToolContext[ApptainerContext], command: str) -> str:
     """Execute a bash command inside the configured Apptainer sandbox."""

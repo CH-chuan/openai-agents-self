@@ -34,7 +34,11 @@ result = await Runner.run(agent, prompt, context=container_ctx)
 
 ### 2. Accept `ToolContext` in Your Tool
 
-Decorate your tool with `@function_tool` and type the first argument as `ToolContext[ApptainerContext]`. The SDK fills in the wrapper when the model chooses the tool.
+Decorate your tool with `@function_tool` and type the first argument as `ToolContext[ApptainerContext]`. The SDK fills in the wrapper when the model chooses the tool. 
+
+Notice: the tool name run_in_apptainer will be directly inject into agent's memory.
+
+During implementation, you may simply want to set the tool name to bash_command, rather than run_in_apptainer. Because generally you do not need to let your agent know the specific container it is using.
 
 ```python
 @function_tool
